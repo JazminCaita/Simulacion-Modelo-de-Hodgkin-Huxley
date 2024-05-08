@@ -1,0 +1,65 @@
+% Definición de parámetros
+v = -65; % Potencial de membrana inicial (mV)
+dt = 0.01; % Paso de tiempo (ms)
+
+% Definición de constantes
+gNa = 120; % Conductancia máxima del canal de sodio (pS)
+gK = 36; % Conductancia máxima del canal de potasio (pS)
+gCl = 0.3; % Conductancia máxima del canal de cloro (pS)
+ENa = 50; % Potencial de equilibrio del sodio (mV)
+EK = -77; % Potencial de equilibrio del potasio (mV)
+ECl = -54.4; % Potencial de equilibrio del cloro (mV)   
+I = 30; % Corriente externa (pA)
+
+% Definición de variables iniciales
+m = 0.5; % Variable de activación del canal de sodio
+h = 0.06; % Variable de inactivación del canal de sodio
+n = 0.5; % Variable de activación del canal de potasio
+
+% Definición de la capacitancia
+C = 1; % Capacitancia de la membrana (pF)
+
+% Simulación
+t = 0:dt:10;
+V = zeros(size(t)); % Vector para almacenar el potencial de membrana en cada paso de tiempo
+
+for i = 1:length(t)
+    % Cálculo de las corrientes
+    INa = gNa * m^3 * h * (v - ENa);
+    IK = gK * n^4 * (v - EK);
+    ICl = gCl * (v - ECl);
+
+    % Cálculo del cambio en el potencial de membrana
+    dV = (I - INa - IK - ICl) / C;
+
+    % Actualización del potencial de membrana
+    v = v + dV * dt;
+
+    % Cálculo de las variables de activación e inactivación
+    alpha_m = (2.5 - 0.1 * (v + 65)) / (exp(2.5 - 0.1 * (v + 65)) - 1);
+    beta_m = 4 * exp((v + 65) / -18);
+    alpha_h = 0.07 * exp((v + 65) / -20);
+    beta_h = 1 / (exp(3 - 0.1 * (v + 65)) + 1);
+    alpha_n = 0.1-0.01 * (v + 65) / (exp(1 - 0.1 * (v + 65)) - 1);
+    beta_n = 0.125 * exp((v + 65) / -80);
+
+    % Cálculo de la derivada de cada probabilidad
+    dm = alpha_m * (1 - m) - beta_m * m;
+    dh = alpha_h * (1 - h) - beta_h * h;
+    dn = alpha_n * (1 - n) - beta_n * n;
+
+    % Actualización de las variables de probabilidad de activación e inactivación
+    m = m + dm * dt;
+    h = h + dh * dt;
+    n = n + dn * dt;
+
+    % Almacenamiento del potencial de membrana
+    V(i) = v;
+end
+
+% Gráfica del potencial de acción
+
+plot(t, V);
+xlabel('Tiempo (ms)');
+ylabel('Potencial de membrana (mV)');
+title('Potencial de acción del Modelo de Hodgkin-Huxley');
